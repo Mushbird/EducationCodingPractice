@@ -1,12 +1,19 @@
 // 모듈 가져오기
 const express = require('express');
-const path = require('path');
 const app = express();
 const bodyParser = require('body-parser');
 const mysql = require('mysql');
 const cookieParser = require('cookie-parser');
 const expressSession = require('express-session');
+const multer = require('multer');
 
+// myMulter변수에 multer를 이용한 파일 업로드에 대한 설정 선언
+const myMulter = multer({
+    dest: 'uploads/', 
+    limits: { 
+        fileSize: 5 * 1024 * 1024
+    }
+});
 // mysql 접속에 필요한 정보 입력
 const conn = mysql.createConnection({
     host:'localhost',
@@ -19,11 +26,11 @@ app.set('views', __dirname + '/views');
 app.set('view engine', 'ejs');
  
 // 정적 미들웨어
-/* app.use(express.static(__dirname+'/public')); */
+// app.use(express.static(__dirname+'/public'));
 
 // public 폴더와 uploads 폴더 오픈
-app.use('/public', static(path.join(__dirname, 'public')));
-app.use('/uploads', static(path.join(__dirname, 'uploads')));
+// app.use('/public', static(path.join(__dirname, 'public')));
+// app.use('/uploads', static(path.join(__dirname, 'uploads')));
 
 // post 미들웨어
 app.use(cookieParser());
@@ -179,25 +186,59 @@ const router = express.Router();
             res.render('addBoard');
         }
     });
-    // 입력처리 (POST)
-    router.post('/addBoard', (req, res) => {
+    // 입력처리 (POST) (업로드 파일: single(1개))
+    router.post('/addBoard', myMulter.single('file'), (req, res) => {
         console.log('POST : /addBoard 입력처리 요청');
         if(!req.session.login_member) {
             console.log('현재 로그인 상태가 아닙니다.');
             res.redirect('/login');
         }else {
-            const board_pw = req.body.boardPw;
-            const board_title = req.body.boardTitle;
-            const board_content = req.body.boardContent;
-            const board_user = req.session.login_member.member_id;
+            const boardPw = req.body.boardPw;
+            const boardTitle = req.body.boardTitle;
+            const boardContent = req.body.boardContent;
+            const boardUser = req.session.login_member.member_id;
+            const boardFile = req.file;
  
-            conn.query('INSERT INTO board(board_pw,board_title,board_content,board_user,board_date) VALUES(?,?,?,?,now())'
-                    ,[board_pw , board_title , board_content , board_user], (err, rs)=>{
+            conn.query('INSERT INTO board(board_pw, board_title, board_content, board_user, board_date) VALUES(?,?,?,?,now())'
+                    ,[boardPw , boardTitle , boardContent , boardUser], (err, rs) => {
                 if(err) {
                     console.log(err);
                     res.end();
                 }else {
-                    res.redirect('/boardList');
+                    console.log('1. 게시물 INSERT성공');
+                    // 게시물 생성후 board no값 가져오기
+                    conn.query('SELECT MAX(board_no)AS no FROM board', (err, rs) => {
+                        if(err) {
+                            console.log(err);
+                            res.end();
+                        }else {
+                            console.log('2. 게시물No SELECT성공');
+                            console.log(rs);
+                            const boardNo = rs[0].no;
+                            // 임의로 생성된 파일이름
+                            const boardfileName = boardFile.filename;
+                            // 확장자(ext) 추출하기
+                            const originalName = boardFile.originalname;
+                            const lastIndexOf = originalName.lastIndexOf('.');
+                            const boardfileExt = originalName.substring(lastIndexOf+1);
+                            // 파일명(원본)
+                            const boardfileOriginal = originalName.substring(0,(originalName.indexOf('.')));
+                            // 파일 타입
+                            const boardfileType = boardFile.mimetype;
+                            // 파일 사이즈 
+                            const boardfileSize = boardFile.size;
+                            conn.query('INSERT INTO boardfile(board_no, boardfile_name, boardfile_original, boardfile_ext, boardfile_type, boardfile_size) VALUES(?,?,?,?,?,?)'
+                                    ,[boardNo, boardfileName, boardfileOriginal, boardfileExt, boardfileType, boardfileSize ], (err, rs) => {
+                                if(err) {
+                                    console.log(err);
+                                    res.end();
+                                }else {
+                                    console.log('3. 게시물 파일 INSERT성공');
+                                    res.redirect('/boardList');
+                                }
+                            });
+                        }
+                    });
                 }
             });
         }
