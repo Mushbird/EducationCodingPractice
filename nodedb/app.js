@@ -325,28 +325,28 @@ const router = express.Router();
         }
     });
 
-    /* 다운로드 요청 처리 */
+    // 다운로드 요청 처리
     router.get('/download/:fileNo', (req, res) => {
-        // 요청시 해당 파일의 id값을 쿼리로 붙여서 전달합니다.(선택된 파일을 DB에서 찾기 위해)
+        // boardfile_no를 통해 다운로드할 파일 정보를 가져옵니다.
         conn.query('SELECT * FROM boardfile WHERE boardfile_no=?'
                 ,[req.params.fileNo], (err, rs) => {
                     if(err) {
                         console.log(err);
                         res.end();
                     }else {
-                        let file = {};
-                        file.files = rs[0];
+                        let file = {}; // 쿼리 결과를 담기위해 file선언
+                        file.files = rs[0]; // files로 지정하고 담아냄
                         let filePath = __dirname + "/../nodedb/uploads/" + file.files.boardfile_name; // 다운로드할 파일의 경로​  
                         console.log('경로 설정 완료');
                         let fileName = file.files.boardfile_original; // 원본파일명​
-                        // 응답 헤더에 파일의 이름과 mime Type을 명시한다.(한글&특수문자,공백 처리)
-                        res.setHeader("Content-Disposition", "attachment;filename=" + encodeURI(fileName) +'.'+file.files.boardfile_ext);
-                        res.setHeader("Content-Type","binary/octet-stream");
+                        // 응답 헤더에 파일 이름과 mime Type을 명시한다.(한글과 특수문자 그리고 공백 처리)
+                        res.setHeader('Content-Disposition', 'attachment;filename=' + encodeURI(fileName) +'.'+ file.files.boardfile_ext);
+                        res.setHeader('Content-Type','binary/octet-stream');
                         console.log('헤더 설정 완료');
-                        // filePath에 있는 파일 스트림 객체를 얻어온다.(바이트 알갱이를 읽어옵니다.)
+                        // filePath에 있는 파일 스트림 객체를 받아온다.(바이트 알갱이들을 읽어옴)
                         let fileStream = fs.createReadStream(filePath);
-                        console.log('파일 스트림 객체 얻기 성공');
-                        // 다운로드 한다.(res 객체에 바이트알갱이를 전송한다)
+                        console.log('파일 스트림 객체 받기 성공');
+                        // 다운로드한다. (res 객체에 바이트 알갱이들을 전송)
                         fileStream.pipe(res);
                     }
         });
