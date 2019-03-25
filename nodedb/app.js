@@ -310,7 +310,7 @@ const router = express.Router();
                     res.end();
                 }else {
                     model.board = rs[0];
-                    conn.query('SELECT * FROM boardfile WHERE board_no=?'
+                    conn.query('SELECT boardfile_no, board_no, boardfile_name, boardfile_original, boardfile_ext, boardfile_type, boardfile_size FROM boardfile WHERE board_no=?'
                             ,[rs[0].board_no], (err, rs) => {
                         if(err) {
                             console.log(err);
@@ -328,7 +328,7 @@ const router = express.Router();
     // 다운로드 요청 처리
     router.get('/download/:fileNo', (req, res) => {
         // boardfile_no를 통해 다운로드할 파일 정보를 가져옵니다.
-        conn.query('SELECT * FROM boardfile WHERE boardfile_no=?'
+        conn.query('SELECT boardfile_no, board_no, boardfile_name, boardfile_original, boardfile_ext, boardfile_type, boardfile_size FROM boardfile WHERE boardfile_no=?'
                 ,[req.params.fileNo], (err, rs) => {
                     if(err) {
                         console.log(err);
