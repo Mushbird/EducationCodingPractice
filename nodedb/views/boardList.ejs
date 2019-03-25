@@ -1,0 +1,58 @@
+<!Doctype html>
+<html>
+    <head>
+        <title>게시판 목록</title>
+    </head>
+    <body>
+        <h1>게시판 목록</h1>
+        <div>
+            <a href='/addboard'>글 추가</a>
+        </div>
+        <table border="1">
+            <tr>
+                <td>번호</td>
+                <td>제목</td>
+                <td>작성자</td>
+            </tr>
+            <%
+            model.boardList.forEach((item, index) => {
+            %>
+            <tr>
+                <td><%=item.board_no%></td>
+                <td><a href='/boardDetail/<%= item.board_no %>'><%=item.board_title%></a></td>
+                <td><%=item.board_user%></td>
+            </tr>
+            <%
+            });
+            %>
+        </table>
+            <!-- <a href='/boardList/1'>처음</a> -->
+        <%
+        if(model.currentPage > 1){
+        %>
+            <a href='/boardList/<%= model.currentPage-1 %>'>이전</a>
+        <%
+        };
+        %>
+        <%
+        if(model.currentPage < model.lastPage){
+        %>
+            <a href='/boardList/<%= model.currentPage+1 %>'>다음</a>
+        <%
+        };
+        %>
+            <!-- <a href='/boardList/<%= model.lastPage %>'>마지막</a> -->
+        <%
+        if(model.loginState) {
+        %>
+        <div>
+            <a href='/logout'>로그아웃</a>
+        </div>
+        <div>
+            <a href='/memberDrop'>회원탈퇴</a>
+        </div>
+        <%
+        }else {}
+        %>
+    </body>
+</html>
