@@ -8,27 +8,31 @@
         <table border='1'>
             <tr>
                 <th>번호</th>
-                <td><%= boardDetail.board_no %></td>
+                <td><%= boardDetail.board.board_no %></td>
             </tr>
             <tr>
                 <th>제목</th>
-                <td><%= boardDetail.board_title %></td>
+                <td><%= boardDetail.board.board_title %></td>
             </tr>
             <tr>
                 <th>내용</th>
-                <td><%= boardDetail.board_content %></td>
+                <td><%= boardDetail.board.board_content %></td>
             </tr>
             <tr>
                 <th>작성자</th>
-                <td><%= boardDetail.board_user %></td>
+                <td><%= boardDetail.board.board_user %></td>
             </tr>
             <tr>
                 <th>날짜</th>
-                <td><%= boardDetail.board_date %></td>
+                <td><%= boardDetail.board.board_date %></td>
+            </tr>
+            <tr>
+                <th>파일</th>
+                <td><a href='/download/<%= boardDetail.boardfile.boardfile_no%>'><%= boardDetail.boardfile.boardfile_original %></a></td>
             </tr>
             <a href='/boardList' type='button'>목록</a>
-            <a href='/updateBoard/<%= boardDetail.board_no %>' type='button'>수정</a>
-            <a href='/deleteBoard/<%= boardDetail.board_no %>' type='button'>삭제</a>
+            <a href='/updateBoard/<%= boardDetail.board.board_no %>' type='button'>수정</a>
+            <a href='/deleteBoard/<%= boardDetail.board.board_no %>' type='button'>삭제</a>
         </table>
         <div>
             <a href='/logout'>로그아웃</a>

@@ -6,6 +6,7 @@ const mysql = require('mysql');
 const cookieParser = require('cookie-parser');
 const expressSession = require('express-session');
 const multer = require('multer');
+const fs = require('fs');
 
 // myMulter변수에 multer를 이용한 파일 업로드에 대한 설정 선언
 const myMulter = multer({
@@ -131,6 +132,7 @@ const router = express.Router();
                                 console.log(err);
                                 res.end();
                             }else {
+                                req.session.destroy();
                                 res.redirect('/login');
                             }
                         });
@@ -296,6 +298,7 @@ const router = express.Router();
     // 게시판 상세내용 (GET)
     router.get('/boardDetail/:board_no', (req, res) => {
         console.log('GET : /boardDetail 상세내용 요청');
+        let model = {};
         if(!req.session.login_member) {
             console.log('현재 로그인 상태가 아닙니다.');
             res.redirect('/login');
@@ -306,10 +309,47 @@ const router = express.Router();
                     console.log(err);
                     res.end();
                 }else {
-                    res.render('boardDetail', {boardDetail:rs[0]});
+                    model.board = rs[0];
+                    conn.query('SELECT * FROM boardfile WHERE board_no=?'
+                            ,[rs[0].board_no], (err, rs) => {
+                        if(err) {
+                            console.log(err);
+                            res.end();
+                        }else {
+                            model.boardfile = rs[0];
+                            res.render('boardDetail', {boardDetail:model});
+                        }
+                    });
                 }
             });
         }
+    });
+
+    /* 다운로드 요청 처리 */
+    router.get('/download/:fileNo', (req, res) => {
+        // 요청시 해당 파일의 id값을 쿼리로 붙여서 전달합니다.(선택된 파일을 DB에서 찾기 위해)
+        conn.query('SELECT * FROM boardfile WHERE boardfile_no=?'
+                ,[req.params.fileNo], (err, rs) => {
+                    if(err) {
+                        console.log(err);
+                        res.end();
+                    }else {
+                        let file = {};
+                        file.files = rs[0];
+                        let filePath = __dirname + "/../nodedb/uploads/" + file.files.boardfile_name; // 다운로드할 파일의 경로​  
+                        console.log('경로 설정 완료');
+                        let fileName = file.files.boardfile_original; // 원본파일명​
+                        // 응답 헤더에 파일의 이름과 mime Type을 명시한다.(한글&특수문자,공백 처리)
+                        res.setHeader("Content-Disposition", "attachment;filename=" + encodeURI(fileName) +'.'+file.files.boardfile_ext);
+                        res.setHeader("Content-Type","binary/octet-stream");
+                        console.log('헤더 설정 완료');
+                        // filePath에 있는 파일 스트림 객체를 얻어온다.(바이트 알갱이를 읽어옵니다.)
+                        let fileStream = fs.createReadStream(filePath);
+                        console.log('파일 스트림 객체 얻기 성공');
+                        // 다운로드 한다.(res 객체에 바이트알갱이를 전송한다)
+                        fileStream.pipe(res);
+                    }
+        });
     });
 
     // 게시판 삭제
