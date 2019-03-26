@@ -1,0 +1,127 @@
+<!DOCTYPE>
+<html>
+<head>
+<meta charset="utf-8">
+<script src="http://code.jquery.com/jquery-1.9.1.js"></script>
+<script>
+$(document).ready(function(){
+    // 삭제
+    $('#btn_remove').on('click',function(){
+        var ck = new Array(); //let ck = [];
+        $('.ck:checked').each(function(index,item){
+            ck.push($(item).val());
+        });
+        $.ajax({
+            url:'/remove',
+            type:'GET',
+            data:{ck:ck},
+            success:function(row){
+                alert(row+'행 삭제');
+                $('#btn_list').trigger('click');
+            }
+        });
+    });
+ 
+    // 추가
+    $('#btn_add').on('click',function(){  //$('#btn_add').click(()=>  
+        var boardPw = $('#boardPw').val();
+        var boardTitle = $('#boardTitle').val();
+        var boardContent = $('#boardContent').val();
+        var boardUser = $('#boardUser').val();
+
+        $.ajax({	// RPC 함수 호출 / 비동기 호출이라고도 함
+            url:'/add', // 함수이름
+            type:'POST', 
+            data:{boardPw:boardPw,boardTitle:boardTitle,boardContent:boardContent,boardUser:boardUser}, // 매개변수 (객체를 보냄)
+            success:function(row){
+                alert(row + '행 추가');
+                $('#btn_list').trigger('click');    // trigger : 클릭을 직접하지 않아도 자동으로 클릭됨
+            
+            }
+        });
+    });
+    // 수정
+    $('#btn_modify').on('click',function(){
+        var boardNo = $('#boardNo').val();
+        var boardPw = $('#boardPw').val();
+        var boardTitle = $('#boardTitle').val();
+        var boardContent = $('#boardContent').val();
+        var boardUser = $('#boardUser').val();
+ 
+        $.ajax({
+            url:'/modifyById',
+            type:'POST',
+            data:{boardNo:boardNo,boardPw:boardPw,boardTitle:boardTitle,boardContent:boardContent,boardUser:boardUser},
+            success:function(row){
+                alert(row + '행 수정');
+                $('#btn_list').trigger('click');
+            }
+        });
+    });
+    // 목록
+    $('#btn_list').on('click',function(){
+        $.ajax({
+            url:'/list',
+            type:'GET',
+            success:(data)=>{
+                $('#list').empty();
+                $(data).each(function(index,item){ // each = foreach (반복문)
+                    $('#list').append('<tr>');
+                    $('#list').append('<td><input type="checkbox" class="ck" value="'+item.boardNo+'"></td>');
+                    $('#list').append('<td>'+item.boardNo+'</td>');
+                    $('#list').append('<td>'+item.boardTitle+'</td>');
+                    $('#list').append('<td>'+item.boardContent+'</td>');
+                    $('#list').append('<td>'+item.boardUser+'</td>');
+                    $('#list').append('<td>'+item.boardDate+'</td>');
+                    $('#list').append('</tr>');
+                });
+            }
+        });
+    });
+});
+</script>
+</head>
+<body>
+    <table border="1">
+        <thead>
+            <tr>
+                <th>No</th>
+                <th>Title</th>
+                <th>Pw</th>
+                <th>Content</th>
+                <th>User</th>
+                <th>추가</th>
+                <th>수정</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><input type="text" id="boardNo"></td>
+                <td><input type="text" id="boardTitle"></td>
+                <td><input type="password" id="boardPw"></td>
+                <td><input type="text" id="boardContent"></td>
+                <td><input type="text" id="boardUser"></td>
+                <td><button id="btn_add">add</button></td>
+                <td><button id="btn_modify">modify</button></td>
+            </tr>
+        </tbody>
+    </table>
+ 
+    <button id="btn_list">회원리스트</button>
+    <table border="1">
+        <thead>
+            <tr>
+                <th></th>
+                <th>No</th>
+                <th>Title</th>
+                <th>Content</th>
+                <th>User</th>
+                <th>Date</th>
+            </tr>
+        </thead>
+        <tbody id="list">
+        </tbody>
+    </table>
+    <button id="btn_remove">remove</button>
+</body>
+</html>
